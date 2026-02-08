@@ -52,11 +52,11 @@
 
     function categoryLabel(v) {
       switch (v) {
-        case 4: return "目前所在地";
+        case 4: return "目前所在";
         case 3: return "家乡";
         case 2: return "去过";
-        case 1: return "想去";
-        default: return "其他";
+        case 1: return "计划去";
+        default: return "暂时没想法去";
       }
     }
 
@@ -91,11 +91,11 @@
         itemHeight: 10,
         textStyle: { fontSize: 12 },
         pieces: [
-          { value: 4, label: "目前所在地", color: "#1976d2" },
+          { value: 4, label: "目前所在", color: "#1976d2" },
           { value: 3, label: "家乡",       color: "#d32f2f" },
           { value: 2, label: "去过",       color: "#ff7f50" },
-          { value: 1, label: "想去",       color: "#ffd54f" },
-          { value: 0, label: "其他",       color: "#eeeeee" }
+          { value: 1, label: "计划去",       color: "#ffd54f" },
+          { value: 0, label: "暂时没想法去",       color: "#eeeeee" }
         ]
       },
 
