@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Travel Map</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #chart { height: 100vh; width: 100vw; }
+  </style>
+
+  <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://fastly.jsdelivr.net/npm/echarts@5/map/js/china.js"></script>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    // ====== 你的分类数据（按你给的） ======
+    const hometown = "江苏";
+    const currentLocation = "福建";
+
+    const visited = new Set([
+      "广东","浙江","山东","黑龙江","北京","陕西","四川","重庆","上海","贵州","湖南","湖北","海南"
+    ]);
+
+    const wantToGo = new Set([
+      "新疆","安徽","西藏","云南","甘肃","内蒙古"
+    ]);
+
+    // 地图里可能出现的省级名称（含港澳台）
+    const provinces = [
+      "北京","天津","上海","重庆",
+      "河北","山西","辽宁","吉林","黑龙江",
+      "江苏","浙江","安徽","福建","江西","山东",
+      "河南","湖北","湖南","广东","海南",
+      "四川","贵州","云南",
+      "陕西","甘肃","青海","内蒙古","广西","西藏","宁夏","新疆",
+      "台湾","香港","澳门"
+    ];
+
+    // 5 类编码：
+    // 4=目前所在地, 3=家乡, 2=去过, 1=想去, 0=其他
+    function categoryValue(name) {
+      if (name === currentLocation) return 4;
+      if (name === hometown) return 3;
+      if (visited.has(name)) return 2;
+      if (wantToGo.has(name)) return 1;
+      return 0;
+    }
+
+    function categoryLabel(v) {
+      switch (v) {
+        case 4: return "目前所在地";
+        case 3: return "家乡";
+        case 2: return "去过";
+        case 1: return "想去";
+        default: return "其他";
+      }
+    }
+
+    function withSuffix(name) {
+      if (["北京","天津","上海","重庆"].includes(name)) return name + "市";
+      if (["广西","宁夏","新疆","西藏","内蒙古"].includes(name)) return name + "自治区";
+      if (name === "香港" || name === "澳门") return name + "特别行政区";
+      if (name === "台湾") return name + "省";
+      return name + "省";
+    }
+
+    const data = provinces.map(name => ({
+      name,
+      value: categoryValue(name)
+    }));
+
+    const chart = echarts.init(document.getElementById("chart"));
+
+    const option = {
+      backgroundColor: "#ffffff",
+      tooltip: {
+        trigger: "item",
+        formatter: (p) => `${withSuffix(p.name)}：${categoryLabel(p.value)}`
+      },
+
+      // 用分段 visualMap 做 5 类配色 + 图例
+      visualMap: {
+        type: "piecewise",
+        left: 16,
+        bottom: 16,
+        itemWidth: 18,
+        itemHeight: 10,
+        textStyle: { fontSize: 12 },
+        pieces: [
+          { value: 4, label: "目前所在地", color: "#1976d2" },
+          { value: 3, label: "家乡",       color: "#d32f2f" },
+          { value: 2, label: "去过",       color: "#ff7f50" },
+          { value: 1, label: "想去",       color: "#ffd54f" },
+          { value: 0, label: "其他",       color: "#eeeeee" }
+        ]
+      },
+
+      series: [{
+        type: "map",
+        map: "china",
+        roam: true,
+        zoom: 1.05,
+        label: { show: false },
+        itemStyle: {
+          borderColor: "#666",
+          borderWidth: 0.8
+        },
+        emphasis: {
+          itemStyle: { areaColor: "#bdbdbd" } // hover 高亮（不改变分类色太多）
+        },
+        data
+      }]
+    };
+
+    chart.setOption(option);
+    window.addEventListener("resize", () => chart.resize());
+  </script>
+</body>
+</html>
