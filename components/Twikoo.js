@@ -1,94 +1,140 @@
 import { siteConfig } from '@/lib/config'
 import { loadExternalResource } from '@/lib/utils'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
- * Giscus评论 @see https://giscus.app/zh-CN
- * Contribute by @txs https://github.com/txs/NotionNext/commit/1bf7179d0af21fb433e4c7773504f244998678cb
- * @returns {JSX.Element}
- * @constructor
+ * Twikoo 评论
  */
 
 const Twikoo = ({ isDarkMode }) => {
   const envId = siteConfig('COMMENT_TWIKOO_ENV_ID')
-console.log('[twikoo] envId from siteConfig:', envId)
-console.log('[twikoo] all twikoo keys:', {
-  COMMENT_TWIKOO_ENV_ID: siteConfig('COMMENT_TWIKOO_ENV_ID'),
-  COMMENT_TWIKOO_ELEMENT_ID: siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo'),
-  COMMENT_TWIKOO_CDN_URL: siteConfig('COMMENT_TWIKOO_CDN_URL')
-})
-
-
   const el = siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo')
   const twikooCDNURL = siteConfig('COMMENT_TWIKOO_CDN_URL')
   const lang = siteConfig('LANG')
-  const [isInit] = useState(useRef(false))
-  const cloudbaseCandidates = [
-    '/cloudbase.full.js',
 
-    // ✅ 官方 CDN（建议优先）
+  const initedRef = useRef(false)
+  const loadingRef = useRef(false)
+
+  // ✅ CloudBase SDK 加载候选：官方优先 + 本地 + 兜底
+  const cloudbaseCandidates = [
     'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js',
-  
-    // ✅ 官方 CDN（指定版本也可用：把 2.21.6 换成你想要的版本）
-    // 'https://static.cloudbase.net/cloudbase-js-sdk/2.21.6/cloudbase.full.js',
-  
-    // 兜底（你原来的）
-    'https://unpkg.com/@cloudbase/js-sdk@2.11.0/dist/cloudbase.full.js',
+    '/cloudbase.full.js',
+    'https://unpkg.com/@cloudbase/js-sdk@2.11.0/dist/cloudbase.full.js'
   ]
 
+  async function loadCloudbase() {
+    if (window.cloudbase) return
+    let lastErr
 
+    for (const url of cloudbaseCandidates) {
+      try {
+        console.log('[twikoo] loading cloudbase:', url)
+        await loadExternalResource(url, 'js')
+        console.log('[twikoo] cloudbase loaded, typeof window.cloudbase =', typeof window.cloudbase)
+        if (window.cloudbase) return
+      } catch (e) {
+        console.warn('[twikoo] cloudbase load failed:', url, e)
+        lastErr = e
+      }
+    }
+    throw lastErr || new Error('cloudbase sdk load failed')
+  }
 
-async function loadCloudbase() {
-  if (window.cloudbase) return
-  let lastErr
-  for (const url of cloudbaseCandidates) {
+  /**
+   * ✅ 方案A：给旧版 SDK 打补丁，让 Twikoo 1.6.44 能调用：
+   * auth.anonymousAuthProvider().signIn()
+   *
+   * 你的 SDK 现在是：signInAnonymously 有，anonymousAuthProvider 没有
+   */
+  function patchCloudbaseAnonymousAuth(targetEnvId) {
+    if (!window.cloudbase?.init) return
+
     try {
-      await loadExternalResource(url, 'js')
-      if (window.cloudbase) return
+      const app = window.cloudbase.init({ env: targetEnvId })
+      const auth = app.auth()
+
+      const hasAnonymousAuthProvider = typeof auth.anonymousAuthProvider === 'function'
+      const hasSignInAnonymously = typeof auth.signInAnonymously === 'function'
+
+      console.log('[twikoo] cloudbase auth check:', {
+        anonymousAuthProvider: typeof auth.anonymousAuthProvider,
+        signInAnonymously: typeof auth.signInAnonymously
+      })
+
+      // 仅在缺失 anonymousAuthProvider 且存在 signInAnonymously 时打补丁
+      if (!hasAnonymousAuthProvider && hasSignInAnonymously) {
+        auth.anonymousAuthProvider = () => ({
+          signIn: () => auth.signInAnonymously()
+        })
+        console.log('[twikoo] patched auth.anonymousAuthProvider() via signInAnonymously()')
+      }
     } catch (e) {
-      lastErr = e
+      console.warn('[twikoo] patchCloudbaseAnonymousAuth failed:', e)
     }
   }
-  throw lastErr || new Error('cloudbase sdk load failed')
-}
 
-  const loadTwikoo = async () => {
+  async function loadTwikooOnce() {
+    // 防重复：避免多次并发加载/初始化
+    if (initedRef.current || loadingRef.current) return
+    loadingRef.current = true
+
     try {
-      await loadCloudbase()                 // ★加这一行：先加载 cloudbase
-      await loadExternalResource(twikooCDNURL, 'js') 
+      console.log('[twikoo] envId from siteConfig:', envId)
+      console.log('[twikoo] config:', {
+        COMMENT_TWIKOO_ENV_ID: siteConfig('COMMENT_TWIKOO_ENV_ID'),
+        COMMENT_TWIKOO_ELEMENT_ID: siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo'),
+        COMMENT_TWIKOO_CDN_URL: siteConfig('COMMENT_TWIKOO_CDN_URL')
+      })
+
+      if (!envId) throw new Error('COMMENT_TWIKOO_ENV_ID is empty')
+      if (!twikooCDNURL) throw new Error('COMMENT_TWIKOO_CDN_URL is empty')
+
+      // 1) 先加载 cloudbase
+      await loadCloudbase()
+
+      // 2) 关键：在加载 twikoo 之前打补丁
+      patchCloudbaseAnonymousAuth(envId)
+
+      // 3) 再加载 twikoo
+      console.log('[twikoo] loading twikoo:', twikooCDNURL)
+      await loadExternalResource(twikooCDNURL, 'js')
 
       const twikoo = window?.twikoo
-      if (
-        typeof twikoo !== 'undefined' &&
-        twikoo &&
-        typeof twikoo.init === 'function'
-      ) {
-        twikoo.init({
-          envId: envId, // 腾讯云环境填 envId；Vercel 环境填地址（https://xxx.vercel.app）
-          el: el, // 容器元素
-          lang: lang // 用于手动设定评论区语言，支持的语言列表 https://github.com/imaegoo/twikoo/blob/main/src/client/utils/i18n/index.js
-          // region: 'ap-guangzhou', // 环境地域，默认为 ap-shanghai，腾讯云环境填 ap-shanghai 或 ap-guangzhou；Vercel 环境不填
-          // path: location.pathname, // 用于区分不同文章的自定义 js 路径，如果您的文章路径不是 location.pathname，需传此参数
-        })
-        console.log('twikoo init', twikoo)
-        isInit.current = true
+      if (!twikoo || typeof twikoo.init !== 'function') {
+        throw new Error('twikoo is not loaded or twikoo.init is not a function')
       }
+
+      // 4) init
+      twikoo.init({
+        envId,
+        el,
+        lang
+        // region: 'ap-guangzhou', // 如你环境在广州可打开试试
+        // path: location.pathname,
+      })
+
+      console.log('[twikoo] init success')
+      initedRef.current = true
     } catch (error) {
-      console.error('twikoo 加载失败', error)
+      console.error('[twikoo] init failed:', error)
+      // 失败允许下次重试（例如 CDN 抽风）
+      initedRef.current = false
+    } finally {
+      loadingRef.current = false
     }
   }
 
+  // 只在首次挂载时 init 一次
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (isInit.current) {
-        console.log('twioo init! clear interval')
-        clearInterval(interval)
-      } else {
-        loadTwikoo()
-      }
-    }, 1000)
-    return () => clearInterval(interval)
+    loadTwikooOnce()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // isDarkMode 变化一般不需要重 init（如果你想强制刷新 UI 再说）
+  useEffect(() => {
+    // 这里先留空，避免你现在被反复 init 影响排错
   }, [isDarkMode])
+
   return <div id="twikoo"></div>
 }
 
