@@ -24,16 +24,18 @@ console.log('[twikoo] all twikoo keys:', {
   const lang = siteConfig('LANG')
   const [isInit] = useState(useRef(false))
   const cloudbaseCandidates = [
-    // 腾讯自家 CDN（优先）
-    'https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.11.0/cloudbase.full.js',
-    'https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.10.0/cloudbase.full.js',
-    'https://imgcache.qq.com/qcloud/cloudbase-js-sdk/2.8.0/cloudbase.full.js',
+    '/cloudbase.full.js'
+
+    // ✅ 官方 CDN（建议优先）
+    'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js',
   
-    // 兜底 CDN
+    // ✅ 官方 CDN（指定版本也可用：把 2.21.6 换成你想要的版本）
+    // 'https://static.cloudbase.net/cloudbase-js-sdk/2.21.6/cloudbase.full.js',
+  
+    // 兜底（你原来的）
     'https://unpkg.com/@cloudbase/js-sdk@2.11.0/dist/cloudbase.full.js',
-    'https://unpkg.com/@cloudbase/js-sdk@2.10.0/dist/cloudbase.full.js',
-    'https://unpkg.com/@cloudbase/js-sdk@2.8.0/dist/cloudbase.full.js'
   ]
+
 
 
 async function loadCloudbase() {
