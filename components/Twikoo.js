@@ -2,10 +2,6 @@ import { siteConfig } from '@/lib/config'
 import { loadExternalResource } from '@/lib/utils'
 import { useEffect, useRef } from 'react'
 
-/**
- * Twikoo 评论
- */
-
 const Twikoo = ({ isDarkMode }) => {
   const envId = siteConfig('COMMENT_TWIKOO_ENV_ID')
   const el = siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo')
@@ -15,7 +11,6 @@ const Twikoo = ({ isDarkMode }) => {
   const initedRef = useRef(false)
   const loadingRef = useRef(false)
 
-  // ✅ CloudBase SDK 加载候选：官方优先 + 本地 + 兜底
   const cloudbaseCandidates = [
     'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js',
     '/cloudbase.full.js',
@@ -25,7 +20,6 @@ const Twikoo = ({ isDarkMode }) => {
   async function loadCloudbase() {
     if (window.cloudbase) return
     let lastErr
-
     for (const url of cloudbaseCandidates) {
       try {
         console.log('[twikoo] loading cloudbase:', url)
@@ -41,61 +35,67 @@ const Twikoo = ({ isDarkMode }) => {
   }
 
   /**
-   * ✅ 方案A：给旧版 SDK 打补丁，让 Twikoo 1.6.44 能调用：
-   * auth.anonymousAuthProvider().signIn()
-   *
-   * 你的 SDK 现在是：signInAnonymously 有，anonymousAuthProvider 没有
+   * ✅ 核心：hook cloudbase.init，让 Twikoo 创建的实例也被打补丁
    */
-  function patchCloudbaseAnonymousAuth(targetEnvId) {
-    if (!window.cloudbase?.init) return
+  function hookCloudbaseInitForTwikoo() {
+    const cb = window.cloudbase
+    if (!cb?.init || cb.__twikooInitHooked) return
 
-    try {
-      const app = window.cloudbase.init({ env: targetEnvId })
-      const auth = app.auth()
+    const originalInit = cb.init.bind(cb)
 
-      const hasAnonymousAuthProvider = typeof auth.anonymousAuthProvider === 'function'
-      const hasSignInAnonymously = typeof auth.signInAnonymously === 'function'
+    cb.init = function patchedInit(options) {
+      const app = originalInit(options)
 
-      console.log('[twikoo] cloudbase auth check:', {
-        anonymousAuthProvider: typeof auth.anonymousAuthProvider,
-        signInAnonymously: typeof auth.signInAnonymously
-      })
+      // 只 patch 一次 auth()，避免重复包裹
+      if (app && typeof app.auth === 'function' && !app.__twikooAuthPatched) {
+        const originalAuth = app.auth.bind(app)
 
-      // 仅在缺失 anonymousAuthProvider 且存在 signInAnonymously 时打补丁
-      if (!hasAnonymousAuthProvider && hasSignInAnonymously) {
-        auth.anonymousAuthProvider = () => ({
-          signIn: () => auth.signInAnonymously()
-        })
-        console.log('[twikoo] patched auth.anonymousAuthProvider() via signInAnonymously()')
+        app.auth = function patchedAuth(...args) {
+          const auth = originalAuth(...args)
+
+          try {
+            const hasAnonymousAuthProvider = typeof auth?.anonymousAuthProvider === 'function'
+            const hasSignInAnonymously = typeof auth?.signInAnonymously === 'function'
+
+            if (!hasAnonymousAuthProvider && hasSignInAnonymously) {
+              auth.anonymousAuthProvider = () => ({
+                signIn: () => auth.signInAnonymously()
+              })
+              console.log('[twikoo] patched anonymousAuthProvider on twikoo auth instance')
+            }
+          } catch (e) {
+            console.warn('[twikoo] patch auth instance failed:', e)
+          }
+
+          return auth
+        }
+
+        app.__twikooAuthPatched = true
       }
-    } catch (e) {
-      console.warn('[twikoo] patchCloudbaseAnonymousAuth failed:', e)
+
+      return app
     }
+
+    cb.__twikooInitHooked = true
+    console.log('[twikoo] cloudbase.init hooked for twikoo')
   }
 
   async function loadTwikooOnce() {
-    // 防重复：避免多次并发加载/初始化
     if (initedRef.current || loadingRef.current) return
     loadingRef.current = true
 
     try {
       console.log('[twikoo] envId from siteConfig:', envId)
-      console.log('[twikoo] config:', {
-        COMMENT_TWIKOO_ENV_ID: siteConfig('COMMENT_TWIKOO_ENV_ID'),
-        COMMENT_TWIKOO_ELEMENT_ID: siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo'),
-        COMMENT_TWIKOO_CDN_URL: siteConfig('COMMENT_TWIKOO_CDN_URL')
-      })
-
       if (!envId) throw new Error('COMMENT_TWIKOO_ENV_ID is empty')
       if (!twikooCDNURL) throw new Error('COMMENT_TWIKOO_CDN_URL is empty')
 
-      // 1) 先加载 cloudbase
+      // 1) load cloudbase
       await loadCloudbase()
 
-      // 2) 关键：在加载 twikoo 之前打补丁
-      patchCloudbaseAnonymousAuth(envId)
+      // 2) hook init BEFORE loading twikoo
+      hookCloudbaseInitForTwikoo()
 
-      // 3) 再加载 twikoo
+      // 3) load twikoo
       console.log('[twikoo] loading twikoo:', twikooCDNURL)
       await loadExternalResource(twikooCDNURL, 'js')
 
@@ -105,34 +105,24 @@ const Twikoo = ({ isDarkMode }) => {
       }
 
       // 4) init
-      twikoo.init({
-        envId,
-        el,
-        lang
-        // region: 'ap-guangzhou', // 如你环境在广州可打开试试
-        // path: location.pathname,
-      })
-
+      twikoo.init({ envId, el, lang })
       console.log('[twikoo] init success')
       initedRef.current = true
-    } catch (error) {
-      console.error('[twikoo] init failed:', error)
-      // 失败允许下次重试（例如 CDN 抽风）
+    } catch (e) {
+      console.error('[twikoo] init failed:', e)
       initedRef.current = false
     } finally {
       loadingRef.current = false
     }
   }
 
-  // 只在首次挂载时 init 一次
   useEffect(() => {
     loadTwikooOnce()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // isDarkMode 变化一般不需要重 init（如果你想强制刷新 UI 再说）
   useEffect(() => {
-    // 这里先留空，避免你现在被反复 init 影响排错
+    // 不重 init，避免重复加载
   }, [isDarkMode])
 
   return <div id="twikoo"></div>
