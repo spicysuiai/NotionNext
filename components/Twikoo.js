@@ -24,7 +24,7 @@ console.log('[twikoo] all twikoo keys:', {
   const lang = siteConfig('LANG')
   const [isInit] = useState(useRef(false))
   const cloudbaseCandidates = [
-    '/cloudbase.full.js'
+    '/cloudbase.full.js',
 
     // ✅ 官方 CDN（建议优先）
     'https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js',
