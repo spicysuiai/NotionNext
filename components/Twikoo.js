@@ -10,7 +10,11 @@ import { useEffect, useRef, useState } from 'react'
  */
 
 const Twikoo = ({ isDarkMode }) => {
-  const envId = siteConfig('COMMENT_TWIKOO_ENV_ID')
+  const envId =
+  siteConfig('COMMENT_TWIKOO_ENV_ID') ||
+  process.env.NEXT_PUBLIC_COMMENT_ENV_ID ||
+  process.env.COMMENT_TWIKOO_ENV_ID
+
   const el = siteConfig('COMMENT_TWIKOO_ELEMENT_ID', '#twikoo')
   const twikooCDNURL = siteConfig('COMMENT_TWIKOO_CDN_URL')
   const lang = siteConfig('LANG')
