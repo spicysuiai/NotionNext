@@ -23,18 +23,30 @@ console.log('[twikoo] all twikoo keys:', {
   const twikooCDNURL = siteConfig('COMMENT_TWIKOO_CDN_URL')
   const lang = siteConfig('LANG')
   const [isInit] = useState(useRef(false))
+  const cloudbaseCandidates = [
+  'https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.3.3/cloudbase.full.js',
+  'https://s4.zstatic.net/npm/@cloudbase/js-sdk@1.3.3/dist/cloudbase.full.js',
+  'https://unpkg.com/@cloudbase/js-sdk@1.3.3/dist/cloudbase.full.js'
+]
+
+async function loadCloudbase() {
+  if (window.cloudbase) return
+  let lastErr
+  for (const url of cloudbaseCandidates) {
+    try {
+      await loadExternalResource(url, 'js')
+      if (window.cloudbase) return
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr || new Error('cloudbase sdk load failed')
+}
 
   const loadTwikoo = async () => {
     try {
-      const cloudbaseSDK =
-        'https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@1.3.3/dist/cloudbase.full.js'
-      
-      if (!window.cloudbase) {
-        await loadExternalResource(cloudbaseSDK, 'js')
-      }
-      if (!window.twikoo) {
-        await loadExternalResource(twikooCDNURL, 'js')
-      }
+      await loadCloudbase()                 // ★加这一行：先加载 cloudbase
+      await loadExternalResource(twikooCDNURL, 'js') 
 
       const twikoo = window?.twikoo
       if (
