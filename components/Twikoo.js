@@ -26,7 +26,16 @@ console.log('[twikoo] all twikoo keys:', {
 
   const loadTwikoo = async () => {
     try {
-      await loadExternalResource(twikooCDNURL, 'js')
+      const cloudbaseSDK =
+        'https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@1.3.3/dist/cloudbase.full.js'
+      
+      if (!window.cloudbase) {
+        await loadExternalResource(cloudbaseSDK, 'js')
+      }
+      if (!window.twikoo) {
+        await loadExternalResource(twikooCDNURL, 'js')
+      }
+
       const twikoo = window?.twikoo
       if (
         typeof twikoo !== 'undefined' &&
