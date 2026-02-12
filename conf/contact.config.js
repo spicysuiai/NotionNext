@@ -20,4 +20,20 @@ module.exports = {
   CONTACT_XIAOHONGSHU: process.env.NEXT_PUBLIC_CONTACT_XIAOHONGSHU || '', // 小红书主页
   CONTACT_ZHISHIXINGQIU: process.env.NEXT_PUBLIC_CONTACT_ZHISHIXINGQIU || '', // 知识星球
   CONTACT_WEHCHAT_PUBLIC: process.env.NEXT_PUBLIC_CONTACT_WEHCHAT_PUBLIC || '' // 微信公众号 格式：https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=【xxxxxx】==#wechat_redirect
+    // QQ：点击跳转（可选）
+  CONTACT_QQ: process.env.NEXT_PUBLIC_CONTACT_QQ || '',
+
+  // QQ 二维码：扫二维码后打开的链接（推荐填 wpa 链接）
+  CONTACT_QQ_QR: process.env.NEXT_PUBLIC_CONTACT_QQ_QR || '',
+
+  // 微信二维码：扫二维码后打开的链接（推荐填你自己的 /contact 页面或一个说明页）
+  CONTACT_WECHAT_QR: process.env.NEXT_PUBLIC_CONTACT_WECHAT_QR || '',
+
+  // Steam：个人主页链接
+  CONTACT_STEAM: process.env.NEXT_PUBLIC_CONTACT_STEAM || '',
+
+  // WeGame / 洛谷：个人主页链接（没有就留空）
+  CONTACT_WEGAME: process.env.NEXT_PUBLIC_CONTACT_WEGAME || '',
+  CONTACT_LUOGU: process.env.NEXT_PUBLIC_CONTACT_LUOGU || '',
+
 }
