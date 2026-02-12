@@ -136,7 +136,7 @@ const SocialButton = () => {
 
         {CONTACT_LUOGU && (
           <a target='_blank' rel='noreferrer' title='Luogu' href={CONTACT_LUOGU}>
-            <img className='transform hover:scale-125 duration-150 w-6 dark:invert' src='/svg/luogu.svg' alt='Luogu' />
+            <img className='transform hover:scale-125 duration-150 w-6 opacity-80 hover:opacity-100' src='/svg/luogu.svg' alt='Luogu' />
           </a>
         )}
       </div>
