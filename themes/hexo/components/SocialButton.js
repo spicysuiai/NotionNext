@@ -7,11 +7,12 @@ import { handleEmailClick } from '@/lib/plugins/mailEncrypt'
  * children 通常传 <img .../> 或 <i .../>
  */
 const CircleIcon = ({ title, onClick, href, children }) => {
-  const base =
-    'inline-flex items-center justify-center w-7 h-7 rounded-full ' +
-    'bg-gray-700 text-white ' +
-    'dark:bg-gray-200 dark:text-gray-800 ' +
-    'transition-transform duration-150 transform hover:scale-125'
+     const base =
+      'inline-flex items-center justify-center w-6 h-6 rounded-full ' +
+      'bg-gray-700 text-white ' +
+      'dark:bg-gray-200 dark:text-gray-800 ' +
+      'transition-transform duration-150 transform hover:scale-125'
+
 
   const inner = (
     <span className={base} title={title} aria-label={title}>
@@ -188,7 +189,7 @@ const SocialButton = () => {
             <img
               src='/svg/luogu.svg'
               alt='Luogu'
-              className='w-4 h-4 invert dark:invert-0'
+              className='w-4 h-4 [filter:brightness(0)_invert(1)] dark:[filter:none]'
             />
           </CircleIcon>
         )}
