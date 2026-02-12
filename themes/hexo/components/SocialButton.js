@@ -154,7 +154,12 @@ const SocialButton = () => {
             </div>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src='/qq_add.png' alt='QQ Add QR' className='w-56 h-56 rounded-lg' />
+            <img
+              src='/qq_add.png'
+              alt='QQ Add QR'
+              className='w-64 max-w-[80vw] h-auto rounded-lg object-contain'
+            />
+
 
             <button
               className='mt-4 w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm'
@@ -178,7 +183,12 @@ const SocialButton = () => {
             </div>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src='/wechat_add.png' alt='WeChat Add QR' className='w-56 h-56 rounded-lg' />
+            <img
+              src='/wechat_add.png'
+              alt='WeChat Add QR'
+              className='w-64 max-w-[80vw] h-auto rounded-lg object-contain'
+            />
+
 
             <button
               className='mt-4 w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm'
