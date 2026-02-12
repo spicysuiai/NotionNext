@@ -2,10 +2,43 @@ import { siteConfig } from '@/lib/config'
 import { useRef, useState } from 'react'
 import { handleEmailClick } from '@/lib/plugins/mailEncrypt'
 
+/**
+ * 圆底图标：浅色模式深底白图标；深色模式浅底深图标
+ * children 通常传 <img .../> 或 <i .../>
+ */
+const CircleIcon = ({ title, onClick, href, children }) => {
+  const base =
+    'inline-flex items-center justify-center w-7 h-7 rounded-full ' +
+    'bg-gray-700 text-white ' +
+    'dark:bg-gray-200 dark:text-gray-800 ' +
+    'transition-transform duration-150 transform hover:scale-125'
+
+  const inner = (
+    <span className={base} title={title} aria-label={title}>
+      {children}
+    </span>
+  )
+
+  if (href) {
+    return (
+      <a target='_blank' rel='noreferrer' href={href} title={title}>
+        {inner}
+      </a>
+    )
+  }
+
+  return (
+    <button onClick={onClick} type='button' title={title} aria-label={title}>
+      {inner}
+    </button>
+  )
+}
+
 const SocialButton = () => {
   const CONTACT_GITHUB = siteConfig('CONTACT_GITHUB')
   const CONTACT_TWITTER = siteConfig('CONTACT_TWITTER')
   const CONTACT_TELEGRAM = siteConfig('CONTACT_TELEGRAM')
+
   const CONTACT_LINKEDIN = siteConfig('CONTACT_LINKEDIN')
   const CONTACT_WEIBO = siteConfig('CONTACT_WEIBO')
   const CONTACT_INSTAGRAM = siteConfig('CONTACT_INSTAGRAM')
@@ -13,10 +46,11 @@ const SocialButton = () => {
   const ENABLE_RSS = siteConfig('ENABLE_RSS')
   const CONTACT_BILIBILI = siteConfig('CONTACT_BILIBILI')
   const CONTACT_YOUTUBE = siteConfig('CONTACT_YOUTUBE')
+
   const CONTACT_XIAOHONGSHU = siteConfig('CONTACT_XIAOHONGSHU')
   const CONTACT_ZHISHIXINGQIU = siteConfig('CONTACT_ZHISHIXINGQIU')
 
-  // QQ：仅作为显示开关（二维码是图片弹窗）
+  // QQ：仅作为显示开关（二维码用图片弹窗）
   const CONTACT_QQ = siteConfig('CONTACT_QQ')
 
   // 跳转链接
@@ -100,13 +134,21 @@ const SocialButton = () => {
 
         {CONTACT_XIAOHONGSHU && (
           <a target='_blank' rel='noreferrer' title='小红书' href={CONTACT_XIAOHONGSHU}>
-            <img className='transform hover:scale-125 duration-150 w-6' src='/svg/xiaohongshu.svg' alt='小红书' />
+            <img
+              className='transform hover:scale-125 duration-150 w-6'
+              src='/svg/xiaohongshu.svg'
+              alt='小红书'
+            />
           </a>
         )}
 
         {CONTACT_ZHISHIXINGQIU && (
           <a target='_blank' rel='noreferrer' title='知识星球' href={CONTACT_ZHISHIXINGQIU}>
-            <img className='transform hover:scale-125 duration-150 w-6' src='/svg/zhishixingqiu.svg' alt='知识星球' />
+            <img
+              className='transform hover:scale-125 duration-150 w-6'
+              src='/svg/zhishixingqiu.svg'
+              alt='知识星球'
+            />
           </a>
         )}
 
@@ -122,22 +164,33 @@ const SocialButton = () => {
           <i className='transform hover:scale-125 duration-150 fab fa-weixin dark:hover:text-indigo-400 hover:text-indigo-600' />
         </button>
 
+        {/* Steam */}
         {CONTACT_STEAM && (
           <a target='_blank' rel='noreferrer' title='Steam' href={CONTACT_STEAM}>
             <i className='transform hover:scale-125 duration-150 fab fa-steam dark:hover:text-indigo-400 hover:text-indigo-600' />
           </a>
         )}
 
+        {/* WeGame：圆底 + 反色 */}
         {CONTACT_WEGAME && (
-          <a target='_blank' rel='noreferrer' title='WeGame' href={CONTACT_WEGAME}>
-            <img className='transform hover:scale-125 duration-150 w-6 dark:invert' src='/svg/wegame.svg' alt='WeGame' />
-          </a>
+          <CircleIcon title='WeGame' href={CONTACT_WEGAME}>
+            <img
+              src='/svg/wegame.svg'
+              alt='WeGame'
+              className='w-4 h-4 invert dark:invert-0'
+            />
+          </CircleIcon>
         )}
 
+        {/* 洛谷：圆底 + 反色 */}
         {CONTACT_LUOGU && (
-          <a target='_blank' rel='noreferrer' title='Luogu' href={CONTACT_LUOGU}>
-            <img className='transform hover:scale-125 duration-150 w-6 opacity-80 hover:opacity-100' src='/svg/luogu.svg' alt='Luogu' />
-          </a>
+          <CircleIcon title='Luogu' href={CONTACT_LUOGU}>
+            <img
+              src='/svg/luogu.svg'
+              alt='Luogu'
+              className='w-4 h-4 invert dark:invert-0'
+            />
+          </CircleIcon>
         )}
       </div>
 
@@ -159,7 +212,6 @@ const SocialButton = () => {
               alt='QQ Add QR'
               className='w-64 max-w-[80vw] h-auto rounded-lg object-contain'
             />
-
 
             <button
               className='mt-4 w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm'
@@ -188,7 +240,6 @@ const SocialButton = () => {
               alt='WeChat Add QR'
               className='w-64 max-w-[80vw] h-auto rounded-lg object-contain'
             />
-
 
             <button
               className='mt-4 w-full py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm'
