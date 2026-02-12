@@ -8,7 +8,7 @@ import { handleEmailClick } from '@/lib/plugins/mailEncrypt'
  */
 const CircleIcon = ({ title, onClick, href, children }) => {
      const base =
-      'inline-flex items-center justify-center w-6 h-6 rounded-full ' +
+      'inline-flex items-center justify-center w-5.5 h-5.5 rounded-full ' +
       'bg-gray-700 text-white ' +
       'dark:bg-gray-200 dark:text-gray-800 ' +
       'transition-transform duration-150 transform hover:scale-125'
@@ -189,7 +189,7 @@ const SocialButton = () => {
             <img
               src='/svg/luogu.svg'
               alt='Luogu'
-              className='w-4 h-4 [filter:brightness(0)_invert(1)] dark:[filter:none]'
+              className='w-3.5 h-3.5 [filter:brightness(0)_invert(1)] dark:[filter:none]'
             />
           </CircleIcon>
         )}
