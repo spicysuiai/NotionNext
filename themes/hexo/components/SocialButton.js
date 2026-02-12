@@ -189,7 +189,7 @@ const SocialButton = () => {
             <img
               src='/svg/luogu.svg'
               alt='Luogu'
-              className='w-3.5 h-3.5 [filter:brightness(0)_invert(1)] dark:[filter:none]'
+              className='w-4 h-4 [filter:brightness(0)_invert(1)] dark:[filter:none]'
             />
           </CircleIcon>
         )}
